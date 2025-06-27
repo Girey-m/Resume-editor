@@ -18,6 +18,18 @@ class SectionStore {
       }
     }
 
+    const savedPdf = localStorage.getItem("pdf-items");
+    if (savedPdf) {
+      try {
+        const parsed = JSON.parse(savedPdf);
+        if (Array.isArray(parsed)) {
+          this.pdfSectionItems = parsed;
+        }
+      } catch (error) {
+        console.log("Ошибка при загрузке pdf секций из localStorage:", error);
+      }
+    }
+
     makeAutoObservable(this);
   }
 
@@ -46,7 +58,47 @@ class SectionStore {
     const [movedItem] = updated.splice(fromIndex, 1);
     updated.splice(toIndex, 0, movedItem);
     this.sectionItems = updated;
-    localStorage.setItem("section-items", JSON.stringify(this.sectionItems));
+    this.saveToStorage();
+  }
+
+  addPdfSection(pdfSection: PdfSection) {
+    const index = this.pdfSectionItems.findIndex(
+      (section) => section.type === pdfSection.type
+    );
+
+    if (index !== -1) {
+      this.pdfSectionItems[index] = pdfSection;
+    } else {
+      this.pdfSectionItems.push(pdfSection);
+    }
+    this.savePdfToStorage();
+  }
+
+  removePdfSection(pdfSection: PdfSection) {
+    const index = this.pdfSectionItems.findIndex(
+      (section) => section.type === pdfSection.type
+    );
+
+    if (index !== -1) {
+      this.pdfSectionItems.splice(index, 1);
+      this.savePdfToStorage();
+    } else {
+      console.log(`Секция с типом ${pdfSection.type} не найдена для удаления.`);
+    }
+  }
+  movePdfSection(fromIndex: number, toIndex: number) {
+    const updated = [...this.pdfSectionItems];
+    const [movedItem] = updated.splice(fromIndex, 1);
+    updated.splice(toIndex, 0, movedItem);
+    this.pdfSectionItems = updated;
+  }
+
+  savePdfToStorage() {
+    localStorage.setItem("pdf-items", JSON.stringify(this.pdfSectionItems));
+  }
+
+  getPdfSectionItems() {
+    return this.pdfSectionItems || "";
   }
 }
 
